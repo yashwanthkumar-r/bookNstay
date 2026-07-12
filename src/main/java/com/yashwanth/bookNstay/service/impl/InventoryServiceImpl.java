@@ -1,10 +1,13 @@
 package com.yashwanth.bookNstay.service.impl;
 
 import com.yashwanth.bookNstay.dto.HotelDto;
+import com.yashwanth.bookNstay.dto.HotelPriceDto;
 import com.yashwanth.bookNstay.dto.HotelSearchRequest;
 import com.yashwanth.bookNstay.entity.Hotel;
+import com.yashwanth.bookNstay.entity.HotelMinPrice;
 import com.yashwanth.bookNstay.entity.Inventory;
 import com.yashwanth.bookNstay.entity.Room;
+import com.yashwanth.bookNstay.repository.HotelMinPriceRepository;
 import com.yashwanth.bookNstay.repository.InventoryRepository;
 import com.yashwanth.bookNstay.service.InventoryService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ public class InventoryServiceImpl implements InventoryService {
 
     private final InventoryRepository inventoryRepository;
     private final ModelMapper modelMapper;
+    private final HotelMinPriceRepository hotelMinPriceRepository;
 
 
     @Override
@@ -59,19 +63,25 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Page<HotelDto> searchHotel(HotelSearchRequest hotelSearchRequest) {
+    public Page<HotelPriceDto> searchHotel(HotelSearchRequest hotelSearchRequest) {
         log.info("Searching for hotels of {} city, from {} to {}",
                 hotelSearchRequest.getCity(), hotelSearchRequest.getStartDate(), hotelSearchRequest.getEndDate());
         Pageable pageable = PageRequest.of(hotelSearchRequest.getPage(), hotelSearchRequest.getSize());
         Long dateCount = ChronoUnit.DAYS.between(hotelSearchRequest.getStartDate(), hotelSearchRequest.getEndDate()) + 1;
 
-        Page<Hotel> hotelPage = inventoryRepository.findHotelsWithAvailableInventory(
+        //business Logic - 90days
+        Page<HotelPriceDto> hotelPage = hotelMinPriceRepository.findHotelsWithAvailableInventory(
+                hotelSearchRequest.getCity(), hotelSearchRequest.getStartDate(),
+                hotelSearchRequest.getEndDate(), pageable);
+
+      /*  Page<Hotel> hotelPage = inventoryRepository.findHotelsWithAvailableInventory(
                 hotelSearchRequest.getCity(), hotelSearchRequest.getStartDate()
                 , hotelSearchRequest.getEndDate(), hotelSearchRequest.getRoomsCount()
-                , dateCount, pageable);
+                , dateCount, pageable);*/
 
-        return hotelPage.map((element) -> modelMapper.map(element, HotelDto.class));
+        //return hotelPage.map((element) -> modelMapper.map(element, HotelPriceDto.class));
 
+        return hotelPage;
     }
 
 

@@ -2,6 +2,7 @@ package com.yashwanth.bookNstay.controller;
 
 import com.yashwanth.bookNstay.dto.HotelDto;
 import com.yashwanth.bookNstay.dto.HotelInfoDto;
+import com.yashwanth.bookNstay.dto.HotelPriceDto;
 import com.yashwanth.bookNstay.dto.HotelSearchRequest;
 import com.yashwanth.bookNstay.service.HotelService;
 import com.yashwanth.bookNstay.service.InventoryService;
@@ -19,8 +20,8 @@ public class HotelBrowseController {
     private final HotelService hotelService;
 
     @GetMapping("/search")
-    public ResponseEntity<Page<HotelDto>> searchHotel(@RequestBody HotelSearchRequest hotelSearchRequest) {
-        Page<HotelDto> page = inventoryService.searchHotel(hotelSearchRequest);
+    public ResponseEntity<Page<HotelPriceDto>> searchHotel(@RequestBody HotelSearchRequest hotelSearchRequest) {
+        Page<HotelPriceDto> page = inventoryService.searchHotel(hotelSearchRequest);
         return ResponseEntity.ok(page);
     }
 
