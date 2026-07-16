@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.yashwanth.bookNstay.util.AppUtils.getCurrentUser;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -78,9 +80,10 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public List<HotelDto> getAllHotels() {
-        log.info("Fetching all the hotels...");
+        User user = getCurrentUser();
 
-        List<Hotel> hotels = hotelRepository.findAll();
+        log.info("Fetching all the hotels for admin user with Id: {}",user.getId());
+        List<Hotel> hotels = hotelRepository.findByOwner(user);
 
         return hotels.stream()
                 .map(hotel -> modelMapper.map(hotel, HotelDto.class))

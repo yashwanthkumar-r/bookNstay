@@ -31,9 +31,11 @@ public class RoomAdminController {
         return new ResponseEntity<>(roomService.createNewRoom(id, roomDto), HttpStatus.CREATED);
     }
 
-    @PutMapping
-    public ResponseEntity<RoomDto> updateRoomById(@PathVariable(name = "hotelId") Long id, @RequestBody RoomDto roomDto) {
-        return ResponseEntity.ok(roomService.updateRoomById(id, roomDto));
+    @PutMapping("/{roomId}")
+    public ResponseEntity<RoomDto> updateRoomById(@PathVariable(name = "hotelId") Long hotelId,
+                                                  @PathVariable(name = "roomId") Long roomId,
+                                                  @RequestBody RoomDto roomDto) {
+        return ResponseEntity.ok(roomService.updateRoomById(hotelId, roomId, roomDto));
     }
 
     @DeleteMapping("/{roomId}")

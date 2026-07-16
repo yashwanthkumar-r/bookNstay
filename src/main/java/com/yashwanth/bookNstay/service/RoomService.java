@@ -12,7 +12,7 @@ public interface RoomService {
 
     RoomDto createNewRoom(Long hotelId, RoomDto requestBody);
 
-    RoomDto updateRoomById(Long roomId, RoomDto requestBody);
+    RoomDto updateRoomById(Long hotelId, Long roomId, RoomDto requestBody);
 
     void deleteRoomById(Long roomId);
 

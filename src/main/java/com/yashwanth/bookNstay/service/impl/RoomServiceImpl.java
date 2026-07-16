@@ -20,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.yashwanth.bookNstay.util.AppUtils.getCurrentUser;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -83,7 +85,7 @@ public class RoomServiceImpl implements RoomService {
         room.setHotel(hotel);
         room = roomRepository.save(room);
 
-        //TODO: create inventory as soon as room is created and if hotel is active
+        //create inventory as soon as room is created and if hotel is active
         if (hotel.getActive()) {
             inventoryService.initializeRoomForAYear(room);
         }
@@ -92,21 +94,26 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional
-    public RoomDto updateRoomById(Long id, RoomDto dto) {
-        log.info("updating the room by id: {}", id);
+    public RoomDto updateRoomById(Long hotelId, Long roomId, RoomDto requestBody) {
+        log.info("updating the room by id: {}", roomId);
 
-        Room room = roomRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Room not found by Id: " + id));
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> {
+                    return new ResourceNotFoundException("Hotel not found with id: " + hotelId);
+                });
+        User user = getCurrentUser();
 
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        if(!user.equals(room.getHotel().getOwner())){
-            throw new UnAuthorizedException("This is not the owner of the hotel, only owner can perform this action");
+        if(!user.equals(hotel.getOwner())){
+            throw new UnAuthorizedException("This is not the owner of the hotel");
         }
 
-        modelMapper.map(dto, room);
-        room.setId(id);
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Room not found by Id: " + roomId));
 
+        modelMapper.map(requestBody, room);
+        room.setId(roomId);
+
+        //TODO: if price or inventory is updated, then update the inventory for this room
         return modelMapper.map(roomRepository.save(room), RoomDto.class);
 
     }

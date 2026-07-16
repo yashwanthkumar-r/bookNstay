@@ -10,6 +10,7 @@ import com.yashwanth.bookNstay.Exception.UnAuthorizedException;
 import com.yashwanth.bookNstay.dto.BookingDto;
 import com.yashwanth.bookNstay.dto.BookingRequest;
 import com.yashwanth.bookNstay.dto.GuestDto;
+import com.yashwanth.bookNstay.dto.HotelReportDto;
 import com.yashwanth.bookNstay.entity.*;
 import com.yashwanth.bookNstay.entity.enums.BookingStatus;
 import com.yashwanth.bookNstay.repository.*;
@@ -20,14 +21,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.yashwanth.bookNstay.util.AppUtils.getCurrentUser;
 
 @Service
 @RequiredArgsConstructor
@@ -235,12 +242,64 @@ public class BookingServiceImpl implements BookingService {
        return booking.getBookingStatus().name();
     }
 
-    public boolean hasBookingExpired(Booking booking) {
-        return booking.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now());
+    @Override
+    public List<BookingDto> getAllBookingByHotelId(Long hotelId) {
+        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->
+                new ResourceNotFoundException("Hotel with id not found: " + hotelId));
+
+        User user = getCurrentUser();
+
+        log.info("getting all booking for hotel with id: {}",hotelId );
+        if(!user.equals(hotel.getOwner())){
+            throw new AccessDeniedException("Only hotel owner of the hotel with id can see "+ hotelId);
+        }
+
+        List<Booking> bookings = bookingRepository.findByHotel(hotel);
+
+        return bookings.stream()
+                .map(booking -> modelMapper.map(booking, BookingDto.class))
+                .collect(Collectors.toList());
     }
 
-    public User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @Override
+    public HotelReportDto getReportByHotelId(Long hotelId, LocalDate startDate, LocalDate endDate) {
+        Hotel hotel = hotelRepository.findById(hotelId).orElseThrow(()->
+                new ResourceNotFoundException("Hotel with id not found: " + hotelId));
+
+        User user = getCurrentUser();
+
+        log.info("generate report for all the bookings for hotel with id: {}", hotelId );
+        if(!user.equals(hotel.getOwner())){
+            throw new AccessDeniedException("Only hotel owner of the hotel with id can see "+ hotelId);
+        }
+
+        //converting date to dateAndTime
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        List<Booking> bookings = bookingRepository.findByHotelAndCreatedAtBetween(hotel, startDateTime, endDateTime);
+
+        //get total confirmed bookings
+        Long totalConfirmedBookings = bookings.stream()
+                .filter(booking -> booking.getBookingStatus() == BookingStatus.CONFIRMED)
+                .count();
+
+        //cal total revenue for the confirmed booking
+        BigDecimal totalRevenueConfirmedBookings = bookings.stream()
+                .filter(booking -> booking.getBookingStatus() == BookingStatus.CONFIRMED)
+                .map(booking -> booking.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        //avg revenue = totRevenue/totalConfirmedBooking
+        BigDecimal avgRevenue = totalConfirmedBookings == 0 ? BigDecimal.ZERO :
+                totalRevenueConfirmedBookings.divide(BigDecimal.valueOf(totalConfirmedBookings), RoundingMode.HALF_UP);
+
+        return new HotelReportDto(totalConfirmedBookings,totalRevenueConfirmedBookings,avgRevenue);
+
+    }
+
+    public boolean hasBookingExpired(Booking booking) {
+        return booking.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now());
     }
 
 

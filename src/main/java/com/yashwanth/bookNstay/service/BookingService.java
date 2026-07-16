@@ -4,10 +4,10 @@ import com.stripe.model.Event;
 import com.yashwanth.bookNstay.dto.BookingDto;
 import com.yashwanth.bookNstay.dto.BookingRequest;
 import com.yashwanth.bookNstay.dto.GuestDto;
-import org.jspecify.annotations.Nullable;
+import com.yashwanth.bookNstay.dto.HotelReportDto;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 public interface BookingService {
 
@@ -23,4 +23,8 @@ public interface BookingService {
     void cancelBooking(Long bookingId);
 
     String getBookingStatus(Long bookingId);
+
+    List<BookingDto> getAllBookingByHotelId(Long hotelId);
+
+    HotelReportDto getReportByHotelId(Long hotelId, LocalDate startDate, LocalDate endDate);
 }

@@ -1,11 +1,12 @@
 package com.yashwanth.bookNstay.dto;
 
-import com.yashwanth.bookNstay.entity.Hotel;
-import com.yashwanth.bookNstay.entity.Room;
+import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Data
 public class InventoryDto {
     private Long id;
     private Integer bookedCount;
@@ -16,8 +17,5 @@ public class InventoryDto {
     private Boolean closed;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private LocalDateTime date;
-    private Hotel hotel;
-    private Room room;
-
+    private LocalDate date;
 }

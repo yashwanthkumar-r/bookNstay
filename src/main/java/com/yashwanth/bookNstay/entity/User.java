@@ -1,5 +1,6 @@
 package com.yashwanth.bookNstay.entity;
 
+import com.yashwanth.bookNstay.entity.enums.Gender;
 import com.yashwanth.bookNstay.entity.enums.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,8 +9,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,6 +27,11 @@ public class User implements UserDetails {
 
     @Column(nullable = false)
     private String name;
+
+    private LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @Column(nullable = false, unique = true)
     private String email;
